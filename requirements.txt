@@ -1,0 +1,13 @@
+pandas 
+numpy
+seaborn
+matplotlib
+scikit-learn
+pymongo
+catboost
+xgboost
+dill
+flask
+certifi
+
+-e .
