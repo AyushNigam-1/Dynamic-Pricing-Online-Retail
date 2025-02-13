@@ -1,55 +1,92 @@
-import os 
+from src.entity.config_entity import DataIngestionConfig
+from src.entity.artifact_entity import DataIngestionArtifact
+from src.exception.exception import CustomException
+from src.logging.logger import logging
+import os
 import sys
-from src.exception import CustomException
-from src.logger import logging
+import numpy as np
 import pandas as pd
+import pymongo
+from typing import List
 from sklearn.model_selection import train_test_split
-from dataclasses import dataclass
-from src.components.data_transformation import DataTransformation
-from src.components.data_transformation import DataTransformationConfig
+from dotenv import load_dotenv
+load_dotenv()
 
-from src.components.model_trainer import ModelTrainerConfig
-from src.components.model_trainer import ModelTrainer
-
-@dataclass
-class DataIngestionConfig:
-    train_data_path:str=os.path.join("artifacts","train.csv")
-    test_data_path:str=os.path.join("artifacts","test.csv")
-    raw_data_path:str = os.path.join("artifacts","data.csv")
+MONGO_DB_URL=os.getenv("MONGO_DB_URL")
 
 class DataIngestion:
-    def __init__(self):
-        self.ingestion_config = DataIngestionConfig()
-
-    def initiate_data_ingestion(self):
-        logging.info("Entered the data ingestion method or component")
-
+    def __init__(self,data_ingestion_config:DataIngestionConfig):
         try:
-            df = pd.read_csv('notebook/data/stud.csv')
-            logging.info("Read the dataset as dataframe")
-            os.makedirs(os.path.dirname(self.ingestion_config.train_data_path),exist_ok=True)
-            df.to_csv(self.ingestion_config.raw_data_path,index=False,header=True)
-            logging.info("Train test split initiated")
-            train_set,test_set = train_test_split(df,test_size=0.2,random_state=42)
-            train_set.to_csv(self.ingestion_config.train_data_path,index=False,header=True)
-            train_set.to_csv(self.ingestion_config.train_data_path,index=False,header=True)
-            test_set.to_csv(self.ingestion_config.test_data_path,index=False,header=True)
-            logging.info("INgestion of the data is completed")
-
-            return (
-                self.ingestion_config.train_data_path,
-                self.ingestion_config.test_data_path
-            )
-        except Exception as e :
+            self.data_ingestion_config=data_ingestion_config
+        except Exception as e:
             raise CustomException(e,sys)
+        
+    def export_collection_as_dataframe(self):
+        try:
+            database_name=self.data_ingestion_config.database_name
+            collection_name=self.data_ingestion_config.collection_name
+            self.mongo_client=pymongo.MongoClient(MONGO_DB_URL)
+            collection=self.mongo_client[database_name][collection_name]
 
-if __name__ == "__main__":
-    obj = DataIngestion()
-    train_data, test_data = obj.initiate_data_ingestion()
+            df=pd.DataFrame(list(collection.find()))
+            if "_id" in df.columns.to_list():
+                df=df.drop(columns=["_id"],axis=1)
+            
+            df.replace({"na":np.nan},inplace=True)
+            return df
+        except Exception as e:
+            raise CustomException(e,sys)
+        
+    def export_data_into_feature_store(self,dataframe: pd.DataFrame):
+        try:
+            feature_store_file_path=self.data_ingestion_config.feature_store_file_path
+            dir_path = os.path.dirname(feature_store_file_path)
+            os.makedirs(dir_path,exist_ok=True)
+            dataframe.to_csv(feature_store_file_path,index=False,header=True)
+            return dataframe
+            
+        except Exception as e:
+            raise CustomException(e,sys)
+        
+    def split_data_as_train_test(self,dataframe: pd.DataFrame):
+        try:
+            train_set, test_set = train_test_split(
+                dataframe, test_size=self.data_ingestion_config.train_test_split_ratio
+            )
+            logging.info("Performed train test split on the dataframe")
 
-    data_transformation = DataTransformation()
-    data_transformation.initiate_data_transformation(train_data,test_data)
-    train_arr,test_arr,_ = data_transformation.initiate_data_transformation(train_data,test_data)
-    modelTrainer =  ModelTrainer()
-    print(modelTrainer.initiate_model_trainer(train_arr,test_arr))
-    # print(modelTrainer.initiate_model_trainer())
+            logging.info(
+                "Exited split_data_as_train_test method of Data_Ingestion class"
+            )
+            
+            dir_path = os.path.dirname(self.data_ingestion_config.training_file_path)
+            
+            os.makedirs(dir_path, exist_ok=True)
+            
+            logging.info(f"Exporting train and test file path.")
+            
+            train_set.to_csv(
+                self.data_ingestion_config.training_file_path, index=False, header=True
+            )
+
+            test_set.to_csv(
+                self.data_ingestion_config.testing_file_path, index=False, header=True
+            )
+            logging.info(f"Exported train and test file path.")
+
+            
+        except Exception as e:
+            raise CustomException(e,sys)
+        
+    def initiate_data_ingestion(self):
+        try:
+            dataframe=self.export_collection_as_dataframe()
+            dataframe=self.export_data_into_feature_store(dataframe)
+            self.split_data_as_train_test(dataframe)
+            dataingestionartifact=DataIngestionArtifact(trained_file_path=self.data_ingestion_config.training_file_path,
+                                                        test_file_path=self.data_ingestion_config.testing_file_path)
+            return dataingestionartifact
+
+        except Exception as e:
+            raise CustomException(e,sys)    
+        

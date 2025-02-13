@@ -9,9 +9,14 @@ src/components/data_ingestion.py
 src/components/data_transformation.py
 src/components/model_trainer.py
 src/constants/__init__.py
+src/constants/training_pipeline/__init__.py
 src/entity/__init__.py
+src/entity/artifact_entity.py
+src/entity/config_entity.py
 src/exception/__init__.py
+src/exception/exception.py
 src/logging/__init__.py
+src/logging/logger.py
 src/pipeline/__init__.py
 src/pipeline/predict_pipeline.py
 src/pipeline/train_pipeline.py
