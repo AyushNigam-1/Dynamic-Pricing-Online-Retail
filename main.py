@@ -3,7 +3,7 @@ from src.components.data_ingestion import DataIngestion
 # from src.components.data_transformation import DataTransformation
 from src.exception.exception import CustomException
 from src.logging.logger import logging
-from src.entity.config_entity import DataIngestionConfig,DataValidationConfig,DataTransformationConfig
+from src.entity.config_entity import DataIngestionConfig
 from src.entity.config_entity import TrainingPipelineConfig
 # from src.components.model_trainer import ModelTrainer
 # from src.entity.config_entity import ModelTrainerConfig
