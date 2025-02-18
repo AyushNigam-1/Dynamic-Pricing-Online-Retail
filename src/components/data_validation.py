@@ -18,7 +18,7 @@ class DataValidation:
             self._schema_config = read_yaml_file(SCHEMA_FILE_PATH)
             self.data_cleaning = DataCleaning(
                 raw_data_path=self.data_ingestion_artifact.feature_store_path,
-                cleaned_data_path=self.data_validation_config.valid_data_file_path
+                cleaned_data_path=self.data_validation_config.valid_data_dir
             )
         except Exception as e:
             raise CustomException(e, sys)
@@ -87,7 +87,8 @@ class DataValidation:
             dataframe = self.read_data(data_file_path)
 
             if not self.validate_number_of_columns(dataframe):
-                raise CustomException("Dataset does not contain the required columns.", sys)
+                logging.error("Dataset does not contain the required columns.")
+                return None
 
             if not self.check_missing_values(dataframe):
                 logging.info("Missing values detected, initiating data cleaning...")
