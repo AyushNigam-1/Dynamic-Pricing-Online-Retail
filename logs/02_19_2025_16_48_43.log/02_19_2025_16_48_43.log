@@ -1,0 +1,5 @@
+[ 2025-02-19 16:48:44,558 ] 19 root - INFO - Initiate the data ingestion
+[ 2025-02-19 16:48:47,851 ] 21 root - INFO - Data Initiation Completed
+[ 2025-02-19 16:48:47,856 ] 25 root - INFO - Initiate the data Validation
+[ 2025-02-19 16:48:47,894 ] 94 root - ERROR - Dataset does not contain the required columns.
+[ 2025-02-19 16:48:47,895 ] 27 root - INFO - data Validation Completed

@@ -9,7 +9,7 @@ defining common constant variable for training pipeline
 # TARGET_COLUMN = "Result"
 PIPELINE_NAME: str = "DYNAMIC_PRICING"
 ARTIFACT_DIR: str = "Artifacts"
-FILE_NAME: str = "Online Retail.xlsx"
+FILE_NAME: str = "Online Retail.csv"
 
 TRAIN_FILE_NAME: str = "train.csv"
 TEST_FILE_NAME: str = "test.csv"

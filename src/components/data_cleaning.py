@@ -33,7 +33,14 @@ class DataCleaning:
             return df
         except Exception as e:
             raise CustomException(e)
-    
+        
+    def handle_duplicates(self, df: pd.DataFrame) -> pd.DataFrame:
+        try:
+            df.drop_duplicates(inplace=True)
+            return df
+        except Exception as e:
+            raise CustomException(e)
+        
     def handle_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
             for column in df.select_dtypes(include=[np.number]).columns:

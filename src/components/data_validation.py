@@ -30,9 +30,13 @@ class DataValidation:
         except Exception as e:
             raise CustomException(e, sys)
     
+    def get_expected_columns(config):
+        return list(config["columns"].keys())
+    
     def validate_number_of_columns(self, dataframe: pd.DataFrame) -> bool:
         try:
-            expected_columns = self._schema_config.keys()
+            expected_columns = list(self._schema_config["columns"].keys()) 
+            print(expected_columns , dataframe.columns)
             return set(dataframe.columns) == set(expected_columns)
         except Exception as e:
             raise CustomException(e, sys)
