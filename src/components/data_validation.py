@@ -107,22 +107,22 @@ class DataValidation:
                 dataframe = self.data_cleaning.handle_outliers(dataframe)
 
             # Save cleaned data
-            valid_data_path = self.data_validation_config.valid_data_file_path
+            valid_data_path = self.data_validation_config.valid_file_path
             os.makedirs(os.path.dirname(valid_data_path), exist_ok=True)
             dataframe.to_csv(valid_data_path, index=False, header=True)
 
-            base_file_path = self.data_validation_config.base_data_file_path
-            if os.path.exists(base_file_path):
-                base_dataframe = self.read_data(base_file_path)
-                drift_status = self.detect_dataset_drift(base_df=base_dataframe, current_df=dataframe)
-            else:
-                logging.info("Base dataset not found. Skipping drift detection.")
-                drift_status = True
+            # base_file_path = self.data_validation_config.base_data_file_path
+            # if os.path.exists(base_file_path):
+            #     base_dataframe = self.read_data(base_file_path)
+            #     drift_status = self.detect_dataset_drift(base_df=base_dataframe, current_df=dataframe)
+            # else:
+            #     logging.info("Base dataset not found. Skipping drift detection.")
+            #     drift_status = True
 
             validation_artifact = DataValidationArtifact(
-                validation_status=drift_status,
+                # validation_status=drift_status,
                 valid_data_file_path=valid_data_path,
-                drift_report_file_path=self.data_validation_config.drift_report_file_path,
+                # drift_report_file_path=self.data_validation_config.drift_report_file_path,
             )
             return validation_artifact
         except Exception as e:

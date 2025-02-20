@@ -12,66 +12,92 @@ class DataCleaning:
             self.raw_data_path = raw_data_path
             self.cleaned_data_path = cleaned_data_path
             self._schema_config = read_yaml_file(SCHEMA_FILE_PATH)
-           
+            logging.info("Initialized DataCleaning with raw_data_path: %s and cleaned_data_path: %s", 
+                         raw_data_path, cleaned_data_path)
         except Exception as e:
+            logging.error("Error initializing DataCleaning: %s", str(e))
             raise CustomException(e)
 
     def read_data(self) -> pd.DataFrame:
         try:
-            return pd.read_csv(self.raw_data_path)
+            logging.info("Reading raw data from %s", self.raw_data_path)
+            df = pd.read_csv(self.raw_data_path)
+            logging.info("Successfully read data with shape: %s", df.shape)
+            return df
         except Exception as e:
+            logging.error("Error reading data: %s", str(e))
             raise CustomException(e)
     
     def handle_missing_values(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
+            logging.info("Handling missing values...")
+            missing_before = df.isnull().sum().sum()
             for column, dtype in self._schema_config.items():
                 if column in df.columns:
-                    if dtype == "float" or dtype == "int":
-                        df[column].fillna(df[column].median(), inplace=True)  # Median imputation for numerical
+                    if dtype in ["float", "int"]:
+                        df[column].fillna(df[column].median(), inplace=True)
                     else:
-                        df[column].fillna(df[column].mode()[0], inplace=True)  # Mode imputation for categorical
+                        df[column].fillna(df[column].mode()[0], inplace=True)
+            missing_after = df.isnull().sum().sum()
+            logging.info("Missing values before: %d, after: %d", missing_before, missing_after)
             return df
         except Exception as e:
+            logging.error("Error handling missing values: %s", str(e))
             raise CustomException(e)
         
-    def handle_duplicates(self, df: pd.DataFrame) -> pd.DataFrame:
+    def handle_duplicate_rows(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
+            logging.info("Handling duplicates...")
+            duplicates_before = df.duplicated().sum()
             df.drop_duplicates(inplace=True)
+            duplicates_after = df.duplicated().sum()
+            logging.info("Duplicates before: %d, after: %d", duplicates_before, duplicates_after)
             return df
         except Exception as e:
+            logging.error("Error handling duplicates: %s", str(e))
             raise CustomException(e)
         
     def handle_outliers(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
+            logging.info("Handling outliers...")
             for column in df.select_dtypes(include=[np.number]).columns:
-                q1 = df[column].quantile(0.25)
-                q3 = df[column].quantile(0.75)
+                q1, q3 = df[column].quantile(0.25), df[column].quantile(0.75)
                 iqr = q3 - q1
-                lower_bound = q1 - 1.5 * iqr
-                upper_bound = q3 + 1.5 * iqr
+                lower_bound, upper_bound = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+                outliers_before = ((df[column] < lower_bound) | (df[column] > upper_bound)).sum()
                 df[column] = np.where(df[column] < lower_bound, lower_bound, df[column])
                 df[column] = np.where(df[column] > upper_bound, upper_bound, df[column])
+                outliers_after = ((df[column] < lower_bound) | (df[column] > upper_bound)).sum()
+                logging.info("Column: %s, Outliers before: %d, after: %d", column, outliers_before, outliers_after)
             return df
         except Exception as e:
+            logging.error("Error handling outliers: %s", str(e))
             raise CustomException(e)
 
     def convert_data_types(self, df: pd.DataFrame) -> pd.DataFrame:
         try:
+            logging.info("Converting data types...")
             for column, dtype in self._schema_config.items():
                 if column in df.columns:
+                    original_dtype = df[column].dtype
                     if dtype == "int":
                         df[column] = df[column].astype(int)
                     elif dtype == "float":
                         df[column] = df[column].astype(float)
                     elif dtype == "object":
                         df[column] = df[column].astype(str)
+                    logging.info("Column: %s, Converted from %s to %s", column, original_dtype, dtype)
             return df
         except Exception as e:
+            logging.error("Error converting data types: %s", str(e))
             raise CustomException(e)
     
     def save_cleaned_data(self, df: pd.DataFrame):
         try:
+            logging.info("Saving cleaned data to %s", self.cleaned_data_path)
             os.makedirs(os.path.dirname(self.cleaned_data_path), exist_ok=True)
             df.to_csv(self.cleaned_data_path, index=False, header=True)
+            logging.info("Successfully saved cleaned data.")
         except Exception as e:
-            raise CustomException(e)
+            logging.error("Error saving cleaned data: %s", str(e))
+            raise CustomException(e)  

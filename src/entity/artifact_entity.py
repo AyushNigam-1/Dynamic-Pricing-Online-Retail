@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass , field
+from typing import Optional
 
 @dataclass
 class DataIngestionArtifact:
@@ -7,6 +8,6 @@ class DataIngestionArtifact:
 
 @dataclass
 class DataValidationArtifact:
-    validation_status: bool
-    valid_data_file_path: str
-    drift_report_file_path: str
+    valid_data_file_path: str  # Required field (must be before default fields)
+    drift_report_file_path: Optional[str] = field(default=None)
+    validation_status: Optional[bool] = field(default=None)
