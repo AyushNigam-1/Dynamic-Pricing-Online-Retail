@@ -74,23 +74,34 @@ class DataCleaning:
             logging.error("Error handling outliers: %s", str(e))
             raise CustomException(e)
 
-    def convert_data_types(self, df: pd.DataFrame) -> pd.DataFrame:
-        try:
-            logging.info("Converting data types...")
-            for column, dtype in self._schema_config.items():
-                if column in df.columns:
-                    original_dtype = df[column].dtype
-                    if dtype == "int":
-                        df[column] = df[column].astype(int)
-                    elif dtype == "float":
-                        df[column] = df[column].astype(float)
-                    elif dtype == "object":
-                        df[column] = df[column].astype(str)
-                    logging.info("Column: %s, Converted from %s to %s", column, original_dtype, dtype)
-            return df
-        except Exception as e:
-            logging.error("Error converting data types: %s", str(e))
-            raise CustomException(e)
+    def convert_data_types(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        expected_dtypes = self._schema_config.get("columns", {})
+
+        for column, expected_dtype in expected_dtypes.items():
+            if column in dataframe.columns:
+                actual_dtype = str(dataframe[column].dtype)
+
+                # Handle string vs object
+                if expected_dtype == "string" and actual_dtype == "object":
+                    logging.info(f"Column {column}: 'object' treated as 'string', no conversion needed.")
+                    continue  # Skip unnecessary conversion
+                
+                if "int" in expected_dtype:
+                    dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce").astype("Int64")
+                elif "float" in expected_dtype:
+                    dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce").astype("float64")
+                elif "datetime" in expected_dtype:
+                    dataframe[column] = pd.to_datetime(dataframe[column], errors="coerce")
+                elif expected_dtype == "string":
+                    dataframe[column] = dataframe[column].astype("string")
+
+                logging.info(f"Converted Column: {column} | From: {actual_dtype} → To: {expected_dtype}")
+
+        return dataframe
+
+
+
+
     
     def save_cleaned_data(self, df: pd.DataFrame):
         try:

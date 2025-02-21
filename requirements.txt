@@ -10,5 +10,5 @@ pyaml
 dill
 flask
 certifi
-
+python-dotenv
 -e .

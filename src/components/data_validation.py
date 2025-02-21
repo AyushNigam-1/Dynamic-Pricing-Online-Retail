@@ -33,6 +33,36 @@ class DataValidation:
     def get_expected_columns(config):
         return list(config["columns"].keys())
     
+
+    def validate_dtypes(self, dataframe: pd.DataFrame) -> bool:
+        try:            
+            expected_dtypes = self._schema_config.get("columns", {})
+            validation_passed = True
+
+            for column, expected_dtype in expected_dtypes.items():
+                if column not in dataframe.columns:
+                    logging.error(f"Missing column: {column} (Expected dtype: {expected_dtype})")
+                    validation_passed = False
+                    continue
+
+                actual_dtype = str(dataframe[column].dtype)
+
+                # Handle object vs. string explicitly
+                if expected_dtype == "string" and actual_dtype == "object":
+                    logging.info(f"Column {column}: 'object' treated as 'string', no conversion needed.")
+                    continue
+
+                if actual_dtype != expected_dtype:
+                    logging.warning(f"Column {column} has incorrect dtype: Expected {expected_dtype}, Found {actual_dtype}")
+                    validation_passed = False  
+
+            return validation_passed
+
+        except Exception as e:
+            logging.error("Error in data type validation: %s", str(e))
+            raise CustomException(e, sys)
+
+    
     def validate_number_of_columns(self, dataframe: pd.DataFrame) -> bool:
         try:
             expected_columns = list(self._schema_config["columns"].keys()) 
@@ -89,6 +119,10 @@ class DataValidation:
         try:
             data_file_path = self.data_ingestion_artifact.feature_store_path
             dataframe = self.read_data(data_file_path)
+
+            if not self.validate_dtypes(dataframe):
+                logging.info("Data type mismatch detected, initiating data cleaning...")
+                dataframe = self.data_cleaning.convert_data_types(dataframe) 
 
             if not self.validate_number_of_columns(dataframe):
                 logging.error("Dataset does not contain the required columns.")
