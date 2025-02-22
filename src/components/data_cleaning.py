@@ -32,12 +32,12 @@ class DataCleaning:
         try:
             logging.info("Handling missing values...")
             missing_before = df.isnull().sum().sum()
-            for column, dtype in self._schema_config.items():
+            for column, dtype in self._schema_config.get("columns", {}).items():
                 if column in df.columns:
-                    if dtype in ["float", "int"]:
-                        df[column].fillna(df[column].median(), inplace=True)
+                    if dtype in ["float64", "int64"]:
+                        df[column] = df[column].fillna(df[column].median())
                     else:
-                        df[column].fillna(df[column].mode()[0], inplace=True)
+                        df[column] = df[column].fillna(df[column].mode()[0])
             missing_after = df.isnull().sum().sum()
             logging.info("Missing values before: %d, after: %d", missing_before, missing_after)
             return df
@@ -74,41 +74,43 @@ class DataCleaning:
             logging.error("Error handling outliers: %s", str(e))
             raise CustomException(e)
 
-    def convert_data_types(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+
+    def convert_data_types(self, df: pd.DataFrame) -> pd.DataFrame:
         expected_dtypes = self._schema_config.get("columns", {})
-
-        for column, expected_dtype in expected_dtypes.items():
-            if column in dataframe.columns:
-                actual_dtype = str(dataframe[column].dtype)
-
-                # Handle string vs object
-                if expected_dtype == "string" and actual_dtype == "object":
-                    logging.info(f"Column {column}: 'object' treated as 'string', no conversion needed.")
-                    continue  # Skip unnecessary conversion
-                
-                if "int" in expected_dtype:
-                    dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce").astype("Int64")
-                elif "float" in expected_dtype:
-                    dataframe[column] = pd.to_numeric(dataframe[column], errors="coerce").astype("float64")
-                elif "datetime" in expected_dtype:
-                    dataframe[column] = pd.to_datetime(dataframe[column], errors="coerce")
-                elif expected_dtype == "string":
-                    dataframe[column] = dataframe[column].astype("string")
-
-                logging.info(f"Converted Column: {column} | From: {actual_dtype} → To: {expected_dtype}")
-
-        return dataframe
-
-
-
-
-    
-    def save_cleaned_data(self, df: pd.DataFrame):
         try:
-            logging.info("Saving cleaned data to %s", self.cleaned_data_path)
-            os.makedirs(os.path.dirname(self.cleaned_data_path), exist_ok=True)
-            df.to_csv(self.cleaned_data_path, index=False, header=True)
-            logging.info("Successfully saved cleaned data.")
+            for column, expected_dtype in expected_dtypes.items():                
+                if column in df.columns:
+                    actual_dtype = str(df[column].dtype)
+
+                    # Handle object vs string efficiently
+                    if expected_dtype == "string" and actual_dtype == "object":
+                        continue  
+                    print(expected_dtype, actual_dtype)
+                    if actual_dtype != expected_dtype:
+                        try:
+                            df[column] = self._convert_column(df[column], expected_dtype)
+                            logging.info(f"Converted Column: {column} | From: {actual_dtype} → To: {expected_dtype}")
+                        except Exception as e:
+                            logging.error(f"Failed to convert column {column}: {e}")
+            return df
         except Exception as e:
-            logging.error("Error saving cleaned data: %s", str(e))
-            raise CustomException(e)  
+            logging.error("Error handling outliers: %s", str(e))
+            raise CustomException(e)
+
+    @staticmethod
+    def _convert_column(series: pd.Series, expected_dtype: str) -> pd.Series:
+        try:
+            if "int" in expected_dtype:
+                return pd.to_numeric(series, errors="coerce").astype("Int64")
+            elif "float" in expected_dtype:
+                return pd.to_numeric(series, errors="coerce").astype("float64")
+            elif "datetime" in expected_dtype:
+                return pd.to_datetime(series, errors="coerce")
+            elif expected_dtype == "string":
+                return series.astype("string")
+            else:
+                logging.warning(f"Unknown dtype {expected_dtype}, keeping original dtype.")
+                return series
+        except Exception as e:
+            logging.error(f"Error converting dtype: {e}")
+            return series  # Keep original if conversion fails

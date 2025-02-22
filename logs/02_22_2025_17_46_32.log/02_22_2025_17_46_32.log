@@ -1,0 +1,26 @@
+[ 2025-02-22 17:46:33,225 ] 19 root - INFO - Initialized DataIngestion with config: <src.entity.config_entity.DataIngestionConfig object at 0x719f2ef175b0>
+[ 2025-02-22 17:46:33,225 ] 19 root - INFO - Initiate the data ingestion
+[ 2025-02-22 17:46:33,225 ] 85 root - INFO - Starting data ingestion process...
+[ 2025-02-22 17:46:33,225 ] 26 root - INFO - Fetching data from MongoDB collection: DynamicPricing in database: MLData
+[ 2025-02-22 17:46:36,708 ] 53 root - INFO - DataFrame created with shape: (10000, 8)
+[ 2025-02-22 17:46:36,719 ] 71 root - INFO - Saving DataFrame to feature store at Artifacts/02_22_2025_17_46_32/data_ingestion/feature_store/Online Retail.csv
+[ 2025-02-22 17:46:36,776 ] 76 root - INFO - Data successfully saved to feature store.
+[ 2025-02-22 17:46:36,776 ] 90 root - INFO - Data ingestion completed successfully.
+[ 2025-02-22 17:46:36,778 ] 21 root - INFO - Data Initiation Completed
+[ 2025-02-22 17:46:36,782 ] 15 root - INFO - Initialized DataCleaning with raw_data_path: Artifacts/02_22_2025_17_46_32/data_ingestion/feature_store/Online Retail.csv and cleaned_data_path: Artifacts/02_22_2025_17_46_32/data_validation/validated
+[ 2025-02-22 17:46:36,782 ] 25 root - INFO - Initiate the data Validation
+[ 2025-02-22 17:46:36,799 ] 54 root - WARNING - Column InvoiceDate has incorrect dtype: Expected datetime64[ns], Found int64
+[ 2025-02-22 17:46:36,800 ] 122 root - INFO - Data type mismatch detected, initiating data cleaning...
+[ 2025-02-22 17:46:36,803 ] 94 root - INFO - Converted Column: InvoiceDate | From: int64 → To: datetime64[ns]
+[ 2025-02-22 17:46:36,808 ] 130 root - INFO - Missing values detected, initiating data cleaning...
+[ 2025-02-22 17:46:36,808 ] 33 root - INFO - Handling missing values...
+[ 2025-02-22 17:46:36,832 ] 44 root - INFO - Missing values before: 2333, after: 0
+[ 2025-02-22 17:46:36,839 ] 134 root - INFO - Duplicate rows detected, initiating data cleaning...
+[ 2025-02-22 17:46:36,839 ] 52 root - INFO - Handling duplicates...
+[ 2025-02-22 17:46:36,853 ] 56 root - INFO - Duplicates before: 196, after: 0
+[ 2025-02-22 17:46:36,860 ] 138 root - INFO - Outliers detected, initiating data cleaning...
+[ 2025-02-22 17:46:36,861 ] 64 root - INFO - Handling outliers...
+[ 2025-02-22 17:46:36,863 ] 73 root - INFO - Column: Quantity, Outliers before: 1005, after: 0
+[ 2025-02-22 17:46:36,866 ] 73 root - INFO - Column: UnitPrice, Outliers before: 628, after: 0
+[ 2025-02-22 17:46:36,868 ] 73 root - INFO - Column: CustomerID, Outliers before: 0, after: 0
+[ 2025-02-22 17:46:36,935 ] 27 root - INFO - data Validation Completed
