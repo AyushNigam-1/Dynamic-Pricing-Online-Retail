@@ -31,7 +31,7 @@ class DataIngestion:
             collection = self.mongo_client[self.data_ingestion_config.database_name][self.data_ingestion_config.collection_name]
 
             # Fetch data
-            mongo_data = list(collection.find().limit(10000))
+            mongo_data = list(collection.find().limit(1000))
 
             if not mongo_data:
                 raise ValueError("No data found in the collection.")

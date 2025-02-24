@@ -105,7 +105,16 @@ class DataCleaning:
             elif "float" in expected_dtype:
                 return pd.to_numeric(series, errors="coerce").astype("float64")
             elif "datetime" in expected_dtype:
-                return pd.to_datetime(series, errors="coerce")
+                if series.dtype in ["int64", "float64"]:
+                    # Detect timestamp format based on value magnitude
+                    max_ts = series.max()
+                    if max_ts > 10**12:  # Likely in milliseconds
+                        return pd.to_datetime(series, unit="ms", errors="coerce")
+                    elif max_ts > 10**9:  # Likely in seconds
+                        return pd.to_datetime(series, unit="s", errors="coerce")
+                    else:  # If values are too small, assume normal datetime conversion
+                        return pd.to_datetime(series, errors="coerce")
+                return pd.to_datetime(series, errors="coerce")  # Handle string/object datetime
             elif expected_dtype == "string":
                 return series.astype("string")
             else:
@@ -113,4 +122,4 @@ class DataCleaning:
                 return series
         except Exception as e:
             logging.error(f"Error converting dtype: {e}")
-            return series  # Keep original if conversion fails
+            return series  # Keep original if conversion failss
