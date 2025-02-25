@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
 from src.exception.exception import CustomException  # Assuming you have this
 from src.logging.logger import logging  # Assuming you have this
@@ -45,28 +45,33 @@ class DataTransformation:
         except Exception as e:
             raise CustomException(e, sys)
 
-    def get_data_transformer_object(self, categorical_features, numeric_cols):
+    def get_data_transformer_object(self, categorical_features, numeric_cols, ordinal_categories):
         try:
             logging.info("Creating data transformer object...")
-            label_encoders = {}
-            for col in categorical_features:
-                le = LabelEncoder()
-                label_encoders[col] = le
-
+            
+            # Define the ordinal encoder with the given category order
+            ordinal_encoder = OrdinalEncoder(
+                categories=[ordinal_categories[col] for col in categorical_features],
+                dtype=int,
+                handle_unknown='use_encoded_value',
+                unknown_value=-1,  # Fix: Use a float value instead of np.nan
+                # dtype=np.float64    # Fix: Ensure dtype is float to match NaNs
+            )
+            # Standard Scaler for numerical features
             scaler = StandardScaler()
-
-            # Create transformers for categorical and numerical features
-            cat_transformers = [(col, LabelEncoder(), [col]) for col in categorical_features]
-            num_transformers = [('scaler', scaler, numeric_cols)]
-
+            
+            # Define transformations
+            cat_transformers = [("ordinal", ordinal_encoder, categorical_features)]
+            num_transformers = [("scaler", scaler, numeric_cols)]
+            
             # Combine transformers using ColumnTransformer
             preprocessor = ColumnTransformer(
                 transformers=cat_transformers + num_transformers,
                 remainder='passthrough'
             )
-
+            
             logging.info("Data transformer object created successfully.")
-            return preprocessor, label_encoders
+            return preprocessor
         except Exception as e:
             raise CustomException(e, sys)
 
@@ -286,29 +291,45 @@ class DataTransformation:
             X = df.drop(columns=[target_column])  # Features (all columns except target)
             y = df[target_column] 
             train_df, test_df = self.split_train_test(X, y)
+            print("Train columns:", train_df.columns)
+            print("Test columns:", test_df.columns)
+            print("Expected categorical features:", categorical_features)
+            print("Expected numeric features:", numeric_cols)
 
-            preprocessing_obj, label_encoders = self.get_data_transformer_object(categorical_features, numeric_cols)
+            ordinal_categories = {
+                "peak_period_level": ["Very Low", "Low", "Medium", "High", "Very High"],
+                "overall_demand_level": ["Low", "Medium", "High"],
+                "RecencySegment": ["Very Low", "Low", "Medium", "High"],
+                "FrequencySegment": ["Very Low", "Low", "Medium", "High"],
+                "MonetarySegment": ["Very Low", "Low", "Medium", "High"],
+                "country_purchasing_power": ["Low", "Medium", "High"],
+                "sales_level_by_country": ["Very Low", "Low", "Medium", "High", "Very High"]
+            }
 
-            print(preprocessing_obj , label_encoders , train_df.columns , test_df.columns)
+            transformer = self.get_data_transformer_object(
+                categorical_features=list(ordinal_categories.keys()),
+                numeric_cols=['Quantity', 'UnitPrice', 'total_sales'],
+                ordinal_categories=ordinal_categories
+            )
 
-            input_feature_train_df = train_df[categorical_features + ['UnitPrice', 'Quantity']]
+            input_feature_train_df = train_df[categorical_features + ['UnitPrice', 'Quantity','total_sales']]
             target_feature_train_df = train_df[target_column]
 
-            input_feature_test_df = test_df[categorical_features + ['UnitPrice', 'Quantity']]
+            input_feature_test_df = test_df[categorical_features + ['UnitPrice', 'Quantity','total_sales']]
             target_feature_test_df = test_df[target_column]
 
             logging.info("Applying preprocessing object to datasets...")
-            print(input_feature_train_df.columns)
-            input_feature_train_arr = preprocessing_obj.fit_transform(input_feature_train_df)
-            input_feature_test_arr = preprocessing_obj.transform(input_feature_test_df)
+            input_feature_train_arr = transformer.fit_transform(input_feature_train_df)
+            input_feature_test_arr = transformer.transform(input_feature_test_df)
+
+            
 
             train_arr = np.c_[input_feature_train_arr, np.array(target_feature_train_df)]
             test_arr = np.c_[input_feature_test_arr, np.array(target_feature_test_df)]
 
             save_numpy_array_data(self.data_transformation_config.transformed_train_file_path, array=train_arr)
             save_numpy_array_data(self.data_transformation_config.transformed_test_file_path, array=test_arr)
-            save_object(self.data_transformation_config.transformed_object_file_path, preprocessing_obj)
-            save_object(self.data_transformation_config.label_encoders_file_path, label_encoders)
+            save_object(self.data_transformation_config.transformed_object_file_path, transformer)
 
             data_transformation_artifact = DataTransformationArtifact(
                 transformed_object_file_path=self.data_transformation_config.transformed_object_file_path,

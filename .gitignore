@@ -1,5 +1,6 @@
-.venv
 venv
 .env
 Artifacts
 logs
+random_forest_model.pkl
+scaler.pkl
