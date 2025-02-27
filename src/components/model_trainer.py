@@ -1,35 +1,22 @@
 import os
 import sys
-
 from src.exception.exception import CustomException 
-from src.logging.logger import logging
-
 from src.entity.artifact_entity import DataTransformationArtifact,ModelTrainerArtifact
 from src.entity.config_entity import ModelTrainerConfig
-
-
-
 from src.utils.ml_utils.model.estimator import NetworkModel
 from src.utils.main_utils.utils import save_object,load_object
 from src.utils.main_utils.utils import load_numpy_array_data,evaluate_models
 from src.utils.ml_utils.metric.regression_metric import get_regression_score
-
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 import os
-# import mlflow
 from urllib.parse import urlparse
+        
+import mlflow
 
-# import dagshub
-#dagshub.init(repo_owner='krishnaik06', repo_name='src', mlflow=True)
-
-os.environ["MLFLOW_TRACKING_URI"]="https://dagshub.com/krishnaik06/src.mlflow"
-os.environ["MLFLOW_TRACKING_USERNAME"]="krishnaik06"
-os.environ["MLFLOW_TRACKING_PASSWORD"]="7104284f1bb44ece21e0e2adb4e36a250ae3251f"
-
-
-
+import dagshub
+dagshub.init(repo_owner='ayushnigam843', repo_name='Dynamic-Pricing-Online-Retail', mlflow=True)
 
 
 class ModelTrainer:
@@ -39,34 +26,17 @@ class ModelTrainer:
             self.data_transformation_artifact=data_transformation_artifact
         except Exception as e:
             raise CustomException(e,sys)
-        
-    # def track_mlflow(self,best_model,classificationmetric):
-    #     mlflow.set_registry_uri("https://dagshub.com/krishnaik06/src.mlflow")
-    #     tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
-    #     with mlflow.start_run():
-    #         f1_score=classificationmetric.f1_score
-    #         precision_score=classificationmetric.precision_score
-    #         recall_score=classificationmetric.recall_score
-
-            
-
-    #         mlflow.log_metric("f1_score",f1_score)
-    #         mlflow.log_metric("precision",precision_score)
-    #         mlflow.log_metric("recall_score",recall_score)
-    #         mlflow.sklearn.log_model(best_model,"model")
-    #         # Model registry does not work with file store
-    #         if tracking_url_type_store != "file":
-
-    #             # Register the model
-    #             # There are other ways to use the Model Registry, which depends on the use case,
-    #             # please refer to the doc for more information:
-    #             # https://mlflow.org/docs/latest/model-registry.html#api-workflow
-    #             mlflow.sklearn.log_model(best_model, "model", registered_model_name=best_model)
-    #         else:
-    #             mlflow.sklearn.log_model(best_model, "model")
 
 
-        
+    def track_mlflow(self, best_model, regression_metric):
+
+        with mlflow.start_run():
+            mlflow.log_metric("MAE", regression_metric.mae)
+            mlflow.log_metric("MSE", regression_metric.mse)
+            mlflow.log_metric("RMSE", regression_metric.rmse)
+            mlflow.log_metric("R2 Score", regression_metric.r2)
+
+            mlflow.sklearn.log_model(best_model, "model")
 
 
     def train_model(self, X_train, y_train, x_test, y_test):
@@ -107,10 +77,11 @@ class ModelTrainer:
         y_train_pred = best_model.predict(X_train)
         train_metric = get_regression_score(y_true=y_train, y_pred=y_train_pred)
 
-        # self.track_mlflow(best_model, train_metric)
+        self.track_mlflow(best_model, train_metric)
 
         y_test_pred = best_model.predict(x_test)
         test_metric = get_regression_score(y_true=y_test, y_pred=y_test_pred)
+        self.track_mlflow(best_model, test_metric)
 
         preprocessor = load_object(file_path=self.data_transformation_artifact.transformed_object_file_path)
 
