@@ -48,6 +48,6 @@ jobs:
         run: |
           huggingface-cli repo create Ayush456/Dynamic-Pricing --type space --yes || true
 
-      - name: Push Project Files to Hugging Face Spaces
+      - name: Push Dockerfile to Hugging Face Spaces
         run: |
-          huggingface-cli upload . --repo Ayush456/Dynamic-Pricing --repo-type space --include "Dockerfile"
+          huggingface-cli upload . Ayush456/Dynamic-Pricing --include "Dockerfile"
