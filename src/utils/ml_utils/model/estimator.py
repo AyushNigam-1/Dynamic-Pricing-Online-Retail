@@ -1,12 +1,7 @@
-from src.constants.training_pipeline import SAVED_MODEL_DIR,MODEL_FILE_NAME
-
-import os
 import sys
-
 from src.exception.exception import CustomException
-from src.logging.logger import logging
 
-class NetworkModel:
+class MLModel:
     def __init__(self,preprocessor,model):
         try:
             self.preprocessor = preprocessor

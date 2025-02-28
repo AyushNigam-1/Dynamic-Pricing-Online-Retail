@@ -1,0 +1,50 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: |
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/dynamic-pricing:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/dynamic-pricing:latest
+
+  deploy-to-huggingface:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
+
+      - name: Log in to Hugging Face
+        run: huggingface-cli login --token "${{ secrets.HF_TOKEN }}"
+
+      - name: Push Docker Image to Hugging Face Spaces
+        run: |
+          huggingface-cli repo create Dynamic-Pricing --organization Ayush456 --type space || true
+          huggingface-cli upload dynamic-pricing/Dockerfile --repo Ayush456/Dynamic-Pricing --path /

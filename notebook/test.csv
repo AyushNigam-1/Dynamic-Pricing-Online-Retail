@@ -1,0 +1,6 @@
+InvoiceNo,StockCode,Description,Quantity,InvoiceDate,UnitPrice,CustomerID,Country,hour,weekday,week,total_sales,peak_period_level,overall_demand_level,RecencySegment,FrequencySegment,MonetarySegment,country_purchasing_power,sales_level_by_country
+536365,85123A,WHITE HANGING HEART T-LIGHT HOLDER,6,2010-12-01 08:26:00,2.55,17850.0,United Kingdom,8,2,48,15.3,Very Low,High,Very Low,Very Low,High,High,Very High
+536365,71053,WHITE METAL LANTERN,6,2010-12-01 08:26:00,3.39,17850.0,United Kingdom,8,2,48,20.34,Very Low,Medium,Very Low,Very Low,High,High,Very High
+536365,84406B,CREAM CUPID HEARTS COAT HANGER,8,2010-12-01 08:26:00,2.75,17850.0,United Kingdom,8,2,48,22.0,Very Low,High,Very Low,Very Low,High,High,Very High
+536365,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,6,2010-12-01 08:26:00,3.39,17850.0,United Kingdom,8,2,48,20.34,Very Low,High,Very Low,Very Low,High,High,Very High
+536365,84029E,RED WOOLLY HOTTIE WHITE HEART.,6,2010-12-01 08:26:00,3.39,17850.0,United Kingdom,8,2,48,20.34,Very Low,High,Very Low,Very Low,High,High,Very High

@@ -3,19 +3,17 @@ import sys
 from src.exception.exception import CustomException 
 from src.entity.artifact_entity import DataTransformationArtifact,ModelTrainerArtifact
 from src.entity.config_entity import ModelTrainerConfig
-from src.utils.ml_utils.model.estimator import NetworkModel
+from src.utils.ml_utils.model.estimator import MLModel
 from src.utils.main_utils.utils import save_object,load_object
 from src.utils.main_utils.utils import load_numpy_array_data,evaluate_models
 from src.utils.ml_utils.metric.regression_metric import get_regression_score
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, AdaBoostRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
-import os
-from urllib.parse import urlparse
-        
+import os        
 import mlflow
-
 import dagshub
+
 dagshub.init(repo_owner='ayushnigam843', repo_name='Dynamic-Pricing-Online-Retail', mlflow=True)
 
 
@@ -88,7 +86,7 @@ class ModelTrainer:
         model_dir_path = os.path.dirname(self.model_trainer_config.trained_model_file_path)
         os.makedirs(model_dir_path, exist_ok=True)
 
-        Network_Model = NetworkModel(preprocessor=preprocessor, model=best_model)
+        Network_Model = MLModel(preprocessor=preprocessor, model=best_model)
         save_object(self.model_trainer_config.trained_model_file_path, obj=Network_Model)
         save_object("final_model/model.pkl", best_model)
 
