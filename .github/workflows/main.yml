@@ -44,7 +44,10 @@ jobs:
       - name: Log in to Hugging Face
         run: huggingface-cli login --token "${{ secrets.HF_TOKEN }}"
 
-      - name: Push Docker Image to Hugging Face Spaces
+      - name: Ensure Hugging Face Space Exists
         run: |
-          huggingface-cli repo create Dynamic-Pricing --organization Ayush456 --type space || true
-          huggingface-cli upload dynamic-pricing/Dockerfile --repo Ayush456/Dynamic-Pricing --path /
+          huggingface-cli repo create Ayush456/Dynamic-Pricing --type space --yes || true
+
+      - name: Push Project Files to Hugging Face Spaces
+        run: |
+          huggingface-cli upload . --repo Ayush456/Dynamic-Pricing --repo-type space --include "Dockerfile"
