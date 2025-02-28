@@ -50,4 +50,4 @@ jobs:
 
       - name: Push Dockerfile to Hugging Face Spaces
         run: |
-          huggingface-cli upload . Ayush456/Dynamic-Pricing --include "Dockerfile"
+          huggingface-cli upload . --repo-id Ayush456/Dynamic-Pricing --include "Dockerfile"
