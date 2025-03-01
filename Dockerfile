@@ -17,4 +17,5 @@ COPY . .
 EXPOSE 8080 
 
 # Default command to run the application
-CMD ["uvicorn", "app:app"] 
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080"]
+
