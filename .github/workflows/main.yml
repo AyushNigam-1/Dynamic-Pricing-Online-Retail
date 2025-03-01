@@ -47,4 +47,5 @@ jobs:
         run: huggingface-cli repo create Dynamic-Pricing --organization Ayush456 --type space --yes || true
 
       - name: Push all files to Hugging Face Spaces
-        run: huggingface-cli upload . Ayush456/Dynamic-Pricing --repo-type space --include "*" --exclude ".git"
+        run: huggingface-cli upload . --repo Ayush456/Dynamic-Pricing --repo-type space --include "*" --exclude ".git"
+
