@@ -19,8 +19,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install Dependencies
-        run: |
-          pip install --no-cache-dir -r requirements.txt
+        run: pip install --no-cache-dir -r requirements.txt
 
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -44,7 +43,8 @@ jobs:
       - name: Log in to Hugging Face
         run: huggingface-cli login --token "${{ secrets.HF_TOKEN }}"
 
+      - name: Create Hugging Face Space
+        run: huggingface-cli repo create Dynamic-Pricing --organization Ayush456 --type space --yes || true
+
       - name: Push Dockerfile to Hugging Face Spaces
-        run: |
-          huggingface-cli repo create Dynamic-Pricing --organization Ayush456 --type space || true
-          huggingface-cli upload Ayush456/Dynamic-Pricing Dockerfile
+        run: huggingface-cli upload Ayush456/Dynamic-Pricing Dockerfile
