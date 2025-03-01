@@ -15,6 +15,7 @@ import pandas as pd
 import sys
 from src.utils.main_utils.utils import load_object
 from src.utils.ml_utils.model.estimator import MLModel
+from src.pipeline.predict_pipeline import PredictPipeline
 from dotenv import load_dotenv
 import pymongo
 
@@ -51,24 +52,36 @@ async def train_route():
     except Exception as e:
         raise CustomException(e,sys)
     
+
 @app.post("/predict")
-async def predict_route(request: Request,file: UploadFile = File(...)):
+async def predict_route(request: Request, file: UploadFile = File(...)):
     try:
-        df=pd.read_csv(file.file)
-        preprocesor=load_object("final_model/preprocessor.pkl")
-        final_model=load_object("final_model/model.pkl")
-        network_model = MLModel(preprocessor=preprocesor,model=final_model)
-        print(df.iloc[0])
-        y_pred = network_model.predict(df)
-        print(y_pred)
-        df['predicted_column'] = y_pred
-        print(df['predicted_column'])
-        df.to_csv('prediction_output/output.csv')
-        table_html = df.to_html(classes='table table-striped')
+        df = pd.read_csv(file.file)
+
+        required_columns = [
+            "InvoiceNo", "StockCode", "Description", "Quantity", "InvoiceDate", "UnitPrice",
+            "CustomerID", "Country", "hour", "weekday", "week", "total_sales",
+            "peak_period_level", "overall_demand_level", "RecencySegment", "FrequencySegment",
+            "MonetarySegment", "country_purchasing_power", "sales_level_by_country",
+        ]
+
+        if not all(col in df.columns for col in required_columns):
+            return {"error": "Missing required input columns"}
+
+        predict_pipeline = PredictPipeline()
+        predictions = predict_pipeline.predict(df)
+
+        df["predicted_price"] = predictions 
+
+        df.to_csv("prediction_output/output.csv", index=False)
+
+        table_html = df.to_html(classes="table table-striped")
+
         return templates.TemplateResponse("table.html", {"request": request, "table": table_html})
-        
+
     except Exception as e:
-            raise CustomException(e,sys)
+        raise CustomException(e, sys)
+
     
 if __name__ == "__main__":
     app_run(host="localhost",port=8080,debug=True)
