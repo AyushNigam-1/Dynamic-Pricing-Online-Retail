@@ -21,10 +21,10 @@ jobs:
       - name: Install Dependencies
         run: pip install --no-cache-dir -r requirements.txt
 
-      - name: Log in to Docker Hub
+      - name: Log in to Docker Hub (optional, if you want to also push to docker hub)
         run: echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Docker Image to Dockerhub (optional)
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/dynamic-pricing:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/dynamic-pricing:latest
@@ -46,5 +46,6 @@ jobs:
       - name: Create Hugging Face Space
         run: huggingface-cli repo create Dynamic-Pricing --organization Ayush456 --type space --yes || true
 
-      - name: Push Dockerfile to Hugging Face Spaces
-        run: huggingface-cli upload Ayush456/Dynamic-Pricing Dockerfile
+      - name: Push all files to Hugging Face Spaces
+        run: |
+          huggingface-cli upload Ayush456/Dynamic-Pricing .
