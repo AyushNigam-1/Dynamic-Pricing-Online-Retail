@@ -17,8 +17,10 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Log in to Hugging Face Docker Registry
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          echo "${{ secrets.HF_TOKEN }}" | docker login registry.huggingface.co -u "${{ secrets.HF_USERNAME }}" --password-stdin
+          echo "${HF_TOKEN}" | docker login registry.huggingface.co -u ${{ secrets.HF_USERNAME }} --password-stdin
 
       - name: Build and Push Docker Image
         run: |
@@ -38,11 +40,13 @@ jobs:
         run: pip install huggingface_hub
 
       - name: Log in to Hugging Face
-        run: huggingface-cli login --token "${{ secrets.HF_TOKEN }}"
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: huggingface-cli login --token "${HF_TOKEN}"
 
       - name: Create Hugging Face Space (if not exists)
         run: |
-          huggingface-cli repo create dynamic-pricing --organization ${{ secrets.HF_USERNAME }} --type space --space-sdk docker --yes || true
+          huggingface-cli repo create dynamic-pricing --type space --space-sdk docker --yes || true
 
       - name: Push Docker Image Reference to Hugging Face Space
         run: |
