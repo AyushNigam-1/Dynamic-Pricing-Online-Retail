@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for Hugging Face Spaces
+name: CI/CD Pipeline for Hugging Face Hub
 
 on:
   push:
@@ -27,28 +27,3 @@ jobs:
           IMAGE_NAME=registry.huggingface.co/${{ secrets.HF_USERNAME }}/dynamic-pricing:latest
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
-
-  deploy-to-huggingface-space:
-    runs-on: ubuntu-latest
-    needs: build-and-push-docker
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Install huggingface_hub
-        run: pip install huggingface_hub
-
-      - name: Log in to Hugging Face
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: huggingface-cli login --token "${HF_TOKEN}"
-
-      - name: Create Hugging Face Space (if not exists)
-        run: |
-          huggingface-cli repo create dynamic-pricing --type space --space-sdk docker --yes || true
-
-      - name: Push Docker Image Reference to Hugging Face Space
-        run: |
-          echo "registry.huggingface.co/${{ secrets.HF_USERNAME }}/dynamic-pricing:latest" > docker_image.txt
-          huggingface-cli upload --repo-type space --repo-id ${{ secrets.HF_USERNAME }}/dynamic-pricing --path docker_image.txt --commit-message "Update Docker image reference"
